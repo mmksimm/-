@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base href="https://web.telegram.org/a/">
+  <title>Гангста войны - Телеграм Мини-Апп</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+    * {
+      box-sizing: border-box;
+      touch-action: manipulation;
+    }
+
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Press Start 2P', cursive;
+      margin: 0;
+      padding: 0;
+      background-color: var(--tg-theme-bg-color, #000000);
+      color: var(--tg-theme-text-color, #ffffff);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 20px;
+      width: 100%;
+    }
+
+    h1,
+    h2 {
+      color: var(--tg-theme-hint-color, #00ff00);
+      text-shadow: 2px 2px #ff00ff;
+    }
+
+    .button {
+      background-color: var(--tg-theme-button-color, #3390ec);
+      color: var(--tg-theme-button-text-color, #ffffff);
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+      image-rendering: pixelated;
+      box-shadow: 0 4px 0 #2980b9;
+      font-size: 14px;
+    }
+
+    .button:hover,
+    .button:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #2980b9;
+    }
+
+    .character,
+    .mission {
+      background-color: var(--tg-theme-secondary-bg-color, #333333);
+      border: 4px solid #00ff00;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .stat {
+      text-align: center;
+      background-color: #000000;
+      padding: 5px;
+      border: 2px solid #ff00ff;
+    }
+
+    .missions {
+      margin-top: 20px;
+    }
+
+    .mission {
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .mission:hover,
+    .mission:active {
+      transform: scale(1.05);
+    }
+
+    .mission.cooldown {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--tg-theme-secondary-bg-color, #333333);
+      color: var(--tg-theme-text-color, #ffffff);
+      padding: 10px 20px;
+      border: 2px solid #00ff00;
+      box-shadow: 0 0 10px #00ff00;
+      display: none;
+      text-align: center;
+      z-index: 1000;
+    }
+
+    .pixel-art {
+      image-rendering: pixelated;
+      width: 32px;
+      height: 32px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 10px;
+    }
+
+    #profile {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    #avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      margin-right: 20px;
+      image-rendering: pixelated;
+      border: 4px solid #00ff00;
+    }
+
+    #clicker {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    #coinButton {
+      width: 200px;
+      height: 200px;
+      background-color: #00ff00;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.1s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #coinButton:active {
+      transform: scale(0.95);
+    }
+
+    #coinButton::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 160px;
+      height: 160px;
+      background-color: #008000;
+      mask-image: url("https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGg2ejF3cGdoczducnN2NmtzNXpxc2htZGRzaHBqZGI4M3ExZWlmayZlcD12MV9pbnRlcm5bCIJYJwxwYnYouKlZPnZyQ/p&c=category/v1.Y2lkPTc5MGI3NjEx.jpg");
+      mask-size: contain;
+      mask-repeat: no-repeat;
+      mask-position: center;
+    }
+
+    #clickerStats {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+
+    @keyframes sparkle {
+      0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 0;
+      }
+
+      50% {
+        transform: scale(1) rotate(180deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(0) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #ffff00;
+      clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+      animation: sparkle 0.5s linear;
+    }
+
+    @keyframes coinPulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .coin-pulse {
+      animation: coinPulse 0.3s ease-in-out;
+    }
+
+    @keyframes moneyFloat {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(-50px) rotate(20deg);
+        opacity: 0;
+      }
+    }
+
+    .money-float {
+      position: absolute;
+      font-size: 24px;
+      color: #00ff00;
+      animation: moneyFloat 1s ease-out;
+      pointer-events: none;
+    }
+
+    #loadingScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--tg-theme-bg-color, #000000);
+      z-index: 1000;
+    }
+
+    #loadingGif {
+      width: 200px;
+      height: 200px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loadingScreen">
+    <img id="loadingGif"
+      src="https://media.giphy.com/media/5KJ7wyYTV6qmbDLjYi/giphy.gif?cid=ecf05e47dd9c4mk1w7awusr03otk6sldxyksbfr2vka5o29x&amp;ep=v1_stickers_search&amp;rid=giphy.gif&amp;ct=s"
+      alt="Loading GIF">
+  </div>
+
+  <div class="container" style="display:none;">
+    <h1>Гангста войны</h1>
+    <div id="generationSection">
+      <img id="generationGif"
+        src="https://media.giphy.com/media/5KJ7wyYTV6qmbDLjYi/giphy.gif?cid=ecf05e47dd9c4mk1w7awusr03otk6sldxyksbfr2vka5o29x&amp;ep=v1_stickers_search&amp;rid=giphy.gif&amp;ct=s"
+        alt="Generation GIF" style="display:none; width: 100%;">
+      <button id="startButton" class="button" onclick="startGeneration()">Начать генерацию</button>
+    </div>
+    <div id="gameSection" style="display:none;">
+      <div id="profile">
+        <img id="avatar" src="" alt="Сгенерированный аватар в стиле пиксель-арт">
+        <div>
+          <h2 id="characterName"></h2>
+          <p>Уровень: <span id="characterLevel"></span></p>
+        </div>
+      </div>
+      <div id="character" class="character">
+        <div class="stats">
+          <div class="stat">
+            <strong>Опыт</strong>
+            <p id="characterExp"></p>
+          </div>
+          <div class="stat">
+            <strong>Деньги</strong>
+            <p id="characterMoney"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="missions">
+        <h2>Доступные миссии</h2>
+        <div id="missionList"></div>
+      </div>
+
+      <button class="button" onclick="openInventory()">
+        <span class="pixel-art" style="background-color: #ffaa00;">📦</span>Инвентарь
+      </button>
+      <button class="button" onclick="openShop()">
+        <span class="pixel-art" style="background-color: #00aaff;">🛒</span>Магазин
+      </button>
+      <button class="button" onclick="openClicker()">
+        <span class="pixel-art" style="background-color: #00ff00;">💼</span>Подработка
+      </button>
+
+      <div id="clicker" style="display: none;">
+        <h2>Подработка</h2>
+        <div id="coinButtonContainer" style="position: relative; width: 200px; height: 200px; margin: 0 auto;">
+          <button id="coinButton" onclick="clickCoin()"></button>
+        </div>
+        <div id="clickerStats">
+          Заработано: $<span id="clickerMoney">0</span>
+        </div>
+      </div>
+
+      <div id="notification"></div>
+    </div>
+  </div>
+
+  <script>
+    let tg = window.Telegram ? window.Telegram.WebApp : null;
+    if (tg) {
+      tg.expand();
+    } else {
+      console.warn("Telegram WebApp is not available");
+    }
+
+    function triggerConfetti() {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: {y: 0.6}
+      });
+    }
+
+    function startGeneration() {
+      const startButton = document.getElementById('startButton');
+      const generationGif = document.getElementById('generationGif');
+
+      startButton.disabled = true;
+      startButton.textContent = "Генерация...";
+      generationGif.style.display = "block";
+
+      // Задержка на 10 секунд
+      setTimeout(() => {
+        triggerConfetti();
+        setTimeout(() => {
+          document.getElementById('generationSection').style.display = 'none';
+          document.getElementById('gameSection').style.display = 'block';
+          initGame(); // Инициализация игры после генерации
+        }, 5000); // Конфетти на 5 секунд
+      }, 6000); // 10 секунд ожидания перед конфетти
+
+      // Save that the user has experienced the generation
+      localStorage.setItem("hasVisited", "true");
+    }
+
+    function initGame() {
+      const hasVisited = localStorage.getItem("hasVisited");
+      if (!hasVisited) {
+        document.getElementById('generationSection').style.display = 'block';
+        document.getElementById('gameSection').style.display = 'none';
+      } else {
+        document.getElementById('generationSection').style.display = 'none';
+        document.getElementById('gameSection').style.display = 'block';
+      }
+
+      const telegramUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+      character.name = telegramUser ? telegramUser.username : "Гангстер";
+      document.getElementById("characterName").textContent = character.name;
+
+      const avatarSeed = telegramUser ? telegramUser.username : "GangstaWars";
+      document.getElementById("avatar").src = `https://api.dicebear.com/7.x/pixel-art/svg?seed=${avatarSeed}&size=128&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+
+      updateCharacterInfo();
+      createMissionList();
+      loadCharacterData();
+    }
+
+    let character = {
+      name: "",
+      level: 1,
+      exp: 0,
+      money: 0,
+      clickerMoney: 0
+    };
+
+    let missions = [
+      {id: 1, name: "Ограбление магазина", reward: 500, expGain: 50, icon: "ограбление.gif", lastCompleted: 0},
+      {id: 2, name: "Угон автомобиля", reward: 800, expGain: 80, icon: "🚗", lastCompleted: 0},
+      {id: 3, name: "Запугивание свидетеля", reward: 300, expGain: 30, icon: "🕵️", lastCompleted: 0}
+    ];
+
+    function updateCharacterInfo() {
+      document.getElementById("characterLevel").textContent = character.level;
+      document.getElementById("characterExp").textContent = character.exp;
+      document.getElementById("characterMoney").textContent = "$" + Math.floor(character.money);
+      document.getElementById("clickerMoney").textContent = Math.floor(character.clickerMoney);
+    }
+
+    function createMissionList() {
+      let missionList = document.getElementById("missionList");
+      missionList.innerHTML = "";
+      missions.forEach(mission => {
+        let missionDiv = document.createElement("div");
+        missionDiv.className = "mission";
+        let cooldownRemaining = getCooldownRemaining(mission);
+        if (cooldownRemaining > 0) {
+          missionDiv.classList.add("cooldown");
+        }
+        missionDiv.innerHTML = `
+          <h3><span class="pixel-art" style="background-color: #${Math.floor(Math.random() * 16777215).toString(16)};">${mission.icon}</span>${mission.name}</h3>
+          <p>Награда: $${mission.reward}</p>
+          <p>Опыт: ${mission.expGain}</p>
+          ${cooldownRemaining > 0 ? `<p>Доступно через: ${formatTime(cooldownRemaining)}</p>` : ''}
+        `;
+        missionDiv.onclick = () => completeMission(mission);
+        missionList.appendChild(missionDiv);
+      });
+    }
+
+    function getCooldownRemaining(mission) {
+      const now = Date.now();
+      const cooldownTime = 7200000; // 2 hours in milliseconds
+      const timeSinceLastCompleted = now - mission.lastCompleted;
+      return Math.max(0, cooldownTime - timeSinceLastCompleted);
+    }
+
+    function formatTime(ms) {
+      const minutes = Math.floor(ms / 60000);
+      const seconds = ((ms % 60000) / 1000).toFixed(0);
+      return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    function completeMission(mission) {
+      const cooldownRemaining = getCooldownRemaining(mission);
+      if (cooldownRemaining > 0) {
+        showNotification(`Миссия "${mission.name}" будет доступна через ${formatTime(cooldownRemaining)}`);
+        return;
+      }
+
+      character.money += mission.reward;
+      character.exp += mission.expGain;
+      if (character.exp >= 100 * character.level) {
+        character.level++;
+        character.exp = 0;
+        showNotification("Уровень повышен!");
+      }
+      mission.lastCompleted = Date.now();
+      updateCharacterInfo();
+      showNotification(`Миссия "${mission.name}" выполнена!`);
+      saveCharacterData();
+      createMissionList(); // Обновляем список миссий
+
+      // Добавляем тактильную отдачу
+      if (tg && tg.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred('success');
+      }
+    }
+
+    function showNotification(message) {
+      let notification = document.getElementById("notification");
+      notification.textContent = message;
+      notification.style.display = "block";
+      setTimeout(() => {
+        notification.style.display = "none";
+      }, 3000);
+
+      // Добавляем тактильную отдачу
+      if (tg && tg.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred('warning');
+      }
+    }
+
+    function openInventory() {
+      if (tg) {
+        tg.showPopup({
+          title: "Инвентарь",
+          message: "Скоро",
+          buttons: [{type: "close"}]
+        });
+        if (tg.HapticFeedback) {
+          tg.HapticFeedback.impactOccurred('soft');
+        }
+      } else {
+        showNotification("Инвентарь недоступен в режиме предпросмотра");
+      }
+    }
+
+    function openShop() {
+      if (tg) {
+        tg.showPopup({
+          title: "Магазин",
+          message:"Скоро Здесь вы сможете покупать снаряжение и улучшения",
+            buttons: [{type: "close"}]
+            });
+        if (tg.HapticFeedback) {
+          tg.HapticFeedback.impactOccurred('light');
+        }
+      } else {
+        showNotification("Магазин недоступен в режиме предпросмотра");
+      }
+    }
+
+    function openClicker() {
+      document.getElementById("clicker").style.display = "block";
+      if (tg && tg.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred('medium');
+      }
+    }
+
+    let clickTimeout;
+    function clickCoin() {
+      if (clickTimeout) {
+        clearTimeout(clickTimeout);
+      }
+
+      character.clickerMoney += 0.1;
+      character.money += 0.1;
+      updateCharacterInfo();
+      saveCharacterData();
+
+      // Анимация пульсации монеты
+      let coinButton = document.getElementById("coinButton");
+      coinButton.classList.add("coin-pulse");
+      setTimeout(() => coinButton.classList.remove("coin-pulse"), 1000);
+
+      // Создание эффекта искр
+      for (let i = 0; i < 5; i++) {
+        createSparkle();
+      }
+
+      // Анимация плавающих денег
+      createFloatingMoney();
+
+      // Случайная тактильная отдача
+      if (tg && tg.HapticFeedback) {
+        const hapticFeedbacks = ['heavy', 'rigid'];
+        const randomFeedback = hapticFeedbacks[Math.floor(Math.random() * hapticFeedbacks.length)];
+        tg.HapticFeedback.impactOccurred(randomFeedback);
+      }
+
+      // Debouncing to allow up to 20 clicks per second
+      clickTimeout = setTimeout(() => {
+        clickTimeout = null;
+      }, 1000);
+    }
+
+    function createSparkle() {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'sparkle';
+      sparkle.style.left = `${Math.random() * 250 + 10}px`;
+      sparkle.style.top = `${Math.random() * 250 + 10}px`;
+      document.getElementById('coinButtonContainer').appendChild(sparkle);
+      setTimeout(() => sparkle.remove(), 500);
+    }
+
+    function createFloatingMoney() {
+      const floatingMoney = document.createElement('div');
+      floatingMoney.className = 'money-float';
+      floatingMoney.textContent = '+$0.1';
+      floatingMoney.style.left = `${Math.random() * 160 + 20}px`;
+      floatingMoney.style.top = '100px';
+      document.getElementById('coinButtonContainer').appendChild(floatingMoney);
+      setTimeout(() => floatingMoney.remove(), 1000);
+    }
+
+    function saveCharacterData() {
+      const dataToSave = {
+        character: character,
+        missions: missions.map(m => ({id: m.id, lastCompleted: m.lastCompleted}))
+      };
+      localStorage.setItem("playerData", JSON.stringify(dataToSave));
+    }
+
+    function loadCharacterData() {
+      const savedData = localStorage.getItem("playerData");
+      if (savedData) {
+        let parsedData = JSON.parse(savedData);
+        character = {...character, ...parsedData.character};
+        parsedData.missions.forEach(m => {
+          let mission = missions.find(missionObj => missionObj.id === m.id);
+          if (mission) {
+            mission.lastCompleted = m.lastCompleted;
+          }
+        });
+        updateCharacterInfo();
+        createMissionList();
+      }
+    }
+
+    if (tg && tg.onEvent) {
+      tg.onEvent('viewportChanged', function () {
+        updateCharacterInfo();
+        createMissionList();
+      });
+    }
+
+    // Автосохранение каждые 30 секунд
+    setInterval(saveCharacterData, 30000);
+
+    // Обновление таймеров миссий каждую секунду
+    setInterval(createMissionList, 1000);
+
+    // Инициализация игры при загрузке
+    document.addEventListener('DOMContentLoaded', () => {
+      showLoadingScreen();
+
+      const coinButton = document.getElementById('coinButton');
+      coinButton.addEventListener('touchstart', clickCoin);
+      coinButton.addEventListener('touchend', clickCoin);
+    });
+
+    function showLoadingScreen() {
+      const loadingScreen = document.getElementById('loadingScreen');
+      const mainContainer = document.querySelector('.container');
+
+      const randomLoadTime = Math.floor(Math.random() * 6000) + 5000;
+
+      setTimeout(() => {
+        loadingScreen.style.display = 'none';
+        mainContainer.style.display = 'block';
+        initGame();
+      }, randomLoadTime);
+    }
+
+    // Предотвращение зума на мобильных устройствах
+    document.addEventListener('touchmove', function (event) {
+      if (event.scale !== 1) {
+        event.preventDefault();
+      }
+    }, {passive: false});
+
+    // Отключение двойного нажатия для зума
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+  </script>
+</body>
+
+</html>
