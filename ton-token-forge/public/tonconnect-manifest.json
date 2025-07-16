@@ -1,0 +1,8 @@
+{
+  "manifest_version": "0",
+  "name": "TON Token Forge",
+  "description": "Create Jetton tokens on TON blockchain",
+  "url": "https://example.com",
+  "icons": ["https://example.com/icon.png"],
+  "bridge_url": "https://bridge.tonapi.io/bridge"
+}
