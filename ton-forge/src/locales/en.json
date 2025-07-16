@@ -1,0 +1,10 @@
+{
+  "createToken": "Create Token",
+  "name": "Name",
+  "ticker": "Ticker",
+  "supply": "Supply",
+  "connectWallet": "Connect wallet",
+  "create": "Create",
+  "cancel": "Cancel",
+  "language": "Language"
+}
