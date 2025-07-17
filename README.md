@@ -20,3 +20,5 @@ This repository contains a minimal Telegram mini-application built with the Tele
 3. Serve the `index.html` through the server and open it via Telegram using `/setwebapp` in BotFather.
 
 The project can also be deployed to services like Vercel or GitHub Pages.
+
+See [DEPLOY.md](DEPLOY.md) for deployment instructions.
