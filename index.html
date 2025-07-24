@@ -1,138 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Telegram Mini App Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мой Telegram Web App</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    /* Базовые переменные для светлой и тёмной тем */
     :root {
-      --bg-color: #ffffff;
-      --text-color: #000000;
-      --hint-color: #999999;
-      --button-color: #0088cc;
-      --button-text: #ffffff;
+      --bg-color: var(--tg-theme-bg-color, #ffffff);
+      --text-color: var(--tg-theme-text-color, #000000);
+      --button-color: var(--tg-theme-button-color, #0088cc);
+      --button-text-color: var(--tg-theme-button-text-color, #ffffff);
     }
+
     body {
-      margin: 0;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      background: var(--bg-color);
+      margin: 0 auto;
+      padding: 20px;
+      max-width: 480px; /* ограничиваем ширину, чтобы выглядеть как нативное мобильное приложение */
+      background-color: var(--bg-color);
       color: var(--text-color);
-      font-family: sans-serif;
+      font-family: system-ui, sans-serif;
       display: flex;
       flex-direction: column;
-      height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
-    #messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px;
+
+    h1 {
+      font-size: 24px;
+      margin-top: 40px;
     }
-    .msg {
-      margin-bottom: 8px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      background: var(--hint-color);
-      color: var(--bg-color);
-      width: fit-content;
-      max-width: 70%;
-    }
-    .mine {
-      margin-left: auto;
-      background: var(--button-color);
-    }
-    form {
-      display: flex;
-      padding: 10px;
-    }
-    input[type="text"] {
-      flex: 1;
-      padding: 8px;
-      font-size: 16px;
-      border: 1px solid var(--hint-color);
-      border-radius: 6px;
-    }
+
     button {
-      margin-left: 8px;
-      background: var(--button-color);
-      color: var(--button-text);
-      border: none;
-      border-radius: 6px;
-      padding: 8px 12px;
+      margin-top: 20px;
+      padding: 10px 16px;
       font-size: 16px;
+      background-color: var(--button-color);
+      color: var(--button-text-color);
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        /* Используем тему Telegram, если доступна */
+        --bg-color: var(--tg-theme-bg-color, #17212b);
+        --text-color: var(--tg-theme-text-color, #ffffff);
+      }
     }
   </style>
 </head>
 <body>
-  <div id="messages"></div>
-  <form id="form">
-    <input id="input" type="text" placeholder="Message" autocomplete="off" />
-    <button type="submit">Send</button>
-  </form>
+  <h1 id="greeting">Здравствуйте!</h1>
+  <button id="send">Отправить данные боту</button>
+
   <script>
+    // Инициализация WebApp и получение данных пользователя
     const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-    function applyTheme() {
-      const theme = tg.colorScheme;
-      if (theme === 'dark') {
-        document.documentElement.style.setProperty('--bg-color', tg.themeParams.bg_color || '#17212b');
-        document.documentElement.style.setProperty('--text-color', tg.themeParams.text_color || '#ffffff');
-        document.documentElement.style.setProperty('--hint-color', tg.themeParams.hint_color || '#808080');
-        document.documentElement.style.setProperty('--button-color', tg.themeParams.button_color || '#5288d8');
-        document.documentElement.style.setProperty('--button-text', tg.themeParams.button_text_color || '#ffffff');
-      } else {
-        document.documentElement.style.setProperty('--bg-color', tg.themeParams.bg_color || '#ffffff');
-        document.documentElement.style.setProperty('--text-color', tg.themeParams.text_color || '#000000');
-        document.documentElement.style.setProperty('--hint-color', tg.themeParams.hint_color || '#cccccc');
-        document.documentElement.style.setProperty('--button-color', tg.themeParams.button_color || '#0088cc');
-        document.documentElement.style.setProperty('--button-text', tg.themeParams.button_text_color || '#ffffff');
-      }
-    }
-    applyTheme();
-    tg.onEvent('themeChanged', applyTheme);
-    tg.onEvent('close', () => console.log('closed'));
+    tg.init(); // сообщает Telegram, что приложение загружено
+    tg.ready(); // сигнал о готовности
+    tg.expand(); // раскрывает WebView на всю высоту
 
-    const messagesEl = document.getElementById('messages');
-    const inputEl = document.getElementById('input');
-    const formEl = document.getElementById('form');
+    // Получаем имя и ID пользователя из initData
+    const user = tg.initDataUnsafe.user;
 
-    let messages = JSON.parse(sessionStorage.getItem('messages') || '[]');
-    render();
-
-    async function fetchMessages() {
-      const resp = await fetch('/api/messages');
-      const data = await resp.json();
-      messages = data;
-      render();
+    // Выводим приветствие, если есть имя
+    if (user && user.first_name) {
+      document.getElementById('greeting').textContent = `Здравствуйте, ${user.first_name}!`;
     }
 
-    function render() {
-      messagesEl.innerHTML = '';
-      messages.forEach(m => {
-        const div = document.createElement('div');
-        div.className = 'msg' + (m.user === tg.initDataUnsafe.user?.id ? ' mine' : '');
-        div.textContent = m.text;
-        messagesEl.appendChild(div);
-      });
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-      sessionStorage.setItem('messages', JSON.stringify(messages));
-    }
-
-    formEl.addEventListener('submit', async e => {
-      e.preventDefault();
-      const text = inputEl.value.trim();
-      if (!text) return;
-      inputEl.value = '';
-      await fetch('/api/messages', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({text, user: tg.initDataUnsafe.user?.id})
-      });
-      fetchMessages();
+    // Обработчик клика по кнопке
+    document.getElementById('send').addEventListener('click', () => {
+      // Пример данных, которые мы хотим отправить боту
+      const data = JSON.stringify({user_id: user?.id, action: 'button_clicked'});
+      tg.sendData(data); // Отправляем данные боту
     });
 
-    setInterval(fetchMessages, 3000);
+    // Слушаем изменение темы Telegram
+    // функция для обновления темы
+    function applyTheme() {
+      document.body.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-color');
+      document.body.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text-color');
+    }
+
+    // применяем тему при загрузке и слушаем изменения
+    applyTheme();
+    tg.onEvent('themeChanged', applyTheme);
   </script>
 </body>
 </html>
