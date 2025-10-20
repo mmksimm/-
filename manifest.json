@@ -1,0 +1,68 @@
+{
+  "name": "Memhash - Telegram Mining",
+  "short_name": "Memhash",
+  "description": "Высокопроизводительное майнинг-приложение для Telegram",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0E0E0E",
+  "theme_color": "#5B8CFF",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ru",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "https://ui-avatars.com/api/?name=MH&background=5B8CFF&color=fff&size=192",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://ui-avatars.com/api/?name=MH&background=5B8CFF&color=fff&size=512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "finance",
+    "utilities",
+    "productivity"
+  ],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Начать майнинг",
+      "short_name": "Майнинг",
+      "description": "Быстрый запуск майнинга",
+      "url": "/?action=start-mining",
+      "icons": [
+        {
+          "src": "https://ui-avatars.com/api/?name=Start&background=A8FF94&color=000&size=96",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Статистика",
+      "short_name": "Статистика",
+      "description": "Просмотр статистики майнинга",
+      "url": "/?action=stats",
+      "icons": [
+        {
+          "src": "https://ui-avatars.com/api/?name=Stats&background=7CFFC0&color=000&size=96",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://via.placeholder.com/540x720/0E0E0E/5B8CFF?text=Memhash+Mining",
+      "sizes": "540x720",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Главный экран Memhash"
+    }
+  ]
+}

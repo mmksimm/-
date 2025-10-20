@@ -2,261 +2,878 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Memhash Web App</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Code+Pro&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Memhash - Telegram Mining</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Telegram Web App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Preconnect для оптимизации -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Шрифты -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
   <style>
+    /* ==================== CSS Variables ==================== */
     :root {
-      --bg-color: #0E0E0E;
-      --card-bg: #1A1A1A;
-      --accent-stop: #FF5E5E;
-      --badge-mining: #A8FF94;
-      --badge-reward: #5B8CFF;
-      --badge-reward-zero: #FFF084;
-      --energy-bar: #7CFFC0;
-      --text-header: #FFFFFF;
-      --text-main: #CCCCCC;
+      /* Цвета - Темная тема */
+      --tg-bg: var(--tg-theme-bg-color, #0E0E0E);
+      --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #1A1A1A);
+      --tg-text: var(--tg-theme-text-color, #FFFFFF);
+      --tg-hint: var(--tg-theme-hint-color, #CCCCCC);
+      --tg-link: var(--tg-theme-link-color, #5B8CFF);
+      --tg-button: var(--tg-theme-button-color, #5B8CFF);
+      --tg-button-text: var(--tg-theme-button-text-color, #FFFFFF);
+
+      /* Кастомные цвета */
+      --accent-primary: #5B8CFF;
+      --accent-success: #7CFFC0;
+      --accent-warning: #FFF084;
+      --accent-danger: #FF5E5E;
+      --accent-mining: #A8FF94;
+
+      /* Градиенты */
+      --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --gradient-success: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+      --gradient-mining: linear-gradient(135deg, #A8FF94 0%, #7CFFC0 100%);
+
+      /* Тени */
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 20px rgba(91, 140, 255, 0.3);
+
+      /* Spacing */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+
+      /* Border radius */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+
+      /* Transitions */
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+      /* Typography */
+      --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Source Code Pro', monospace;
     }
+
+    /* ==================== Reset & Base Styles ==================== */
     * {
       box-sizing: border-box;
-    }
-    body {
       margin: 0;
       padding: 0;
-      background: var(--bg-color);
-      color: var(--text-main);
-      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
-    h1, h2 {
-      font-weight: 600;
-      color: var(--text-header);
-      margin: 0 0 8px 0;
-    }
-    .container {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-    .card {
-      background: var(--card-bg);
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-    }
-    .profile-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .label {
-      font-size: 12px;
-      color: var(--text-header);
-    }
-    .value {
-      font-family: 'Source Code Pro', monospace;
-      font-size: 14px;
-    }
-    .status-badge {
-      display: inline-block;
-      background: var(--badge-mining);
-      color: #000;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-    .stop-btn {
-      width: 100%;
-      background: var(--accent-stop);
-      color: #fff;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .stop-btn:active {
-      opacity: 0.7;
-    }
-    .energy-bar {
-      height: 10px;
-      background: #333;
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 4px;
-    }
-    .energy-fill {
-      background: var(--energy-bar);
+
+    html, body {
       height: 100%;
-      width: 50%;
-      transition: width 0.3s ease;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    .recent-blocks {
+
+    body {
+      font-family: var(--font-primary);
+      background: var(--tg-bg);
+      color: var(--tg-text);
+      line-height: 1.5;
+      touch-action: pan-y;
+      overscroll-behavior-y: contain;
+    }
+
+    /* ==================== Layout ==================== */
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: var(--spacing-md);
+      width: 100%;
+      flex: 1;
+    }
+
+    /* ==================== Header ==================== */
+    .header {
+      position: sticky;
+      top: 0;
+      background: var(--tg-bg);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      padding: var(--spacing-md) 0;
+      margin-bottom: var(--spacing-lg);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--gradient-primary);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .logo-text {
+      font-size: 24px;
+      font-weight: 700;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-primary);
+      object-fit: cover;
+    }
+
+    /* ==================== Cards ==================== */
+    .card {
+      background: var(--tg-secondary-bg);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-md);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition-base), box-shadow var(--transition-base);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .card:active {
+      transform: scale(0.98);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--tg-text);
+    }
+
+    .card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--gradient-mining);
+      color: #000;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #000;
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* ==================== Stats Grid ==================== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: var(--spacing-md);
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--tg-hint);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--tg-text);
+      display: flex;
+      align-items: baseline;
+      gap: var(--spacing-xs);
+    }
+
+    .stat-unit {
+      font-size: 14px;
+      color: var(--tg-hint);
+      font-weight: 500;
+    }
+
+    /* ==================== Energy Bar ==================== */
+    .energy-container {
+      margin-top: var(--spacing-sm);
+    }
+
+    .energy-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .energy-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 100px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .energy-fill {
+      height: 100%;
+      background: var(--gradient-success);
+      border-radius: 100px;
+      transition: width var(--transition-slow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .energy-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* ==================== Buttons ==================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      padding: 14px 24px;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      font-family: var(--font-primary);
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: var(--tg-button);
+      color: var(--tg-button-text);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn-danger {
+      background: var(--accent-danger);
+      color: #fff;
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--tg-button);
+      color: var(--tg-button);
+    }
+
+    .btn-large {
+      padding: 18px 32px;
+      font-size: 16px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ==================== Block List ==================== */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--tg-text);
+    }
+
+    .section-action {
+      font-size: 14px;
+      color: var(--tg-link);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .block-list {
       list-style: none;
-      padding: 0;
-      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
     }
-    .recent-blocks li {
-      background: var(--card-bg);
-      margin-bottom: 8px;
-      padding: 12px;
-      border-radius: 8px;
+
+    .block-item {
+      background: var(--tg-secondary-bg);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
+
+    .block-item:active {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
     .block-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 4px;
+      margin-bottom: var(--spacing-sm);
     }
-    .reward-tag {
-      padding: 2px 6px;
-      border-radius: 4px;
-      color: #000;
-      font-family: 'Source Code Pro', monospace;
+
+    .block-number {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--tg-text);
+    }
+
+    .reward-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 100px;
       font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-mono);
     }
-    .modal {
+
+    .reward-positive {
+      background: var(--accent-success);
+      color: #000;
+    }
+
+    .reward-zero {
+      background: var(--accent-warning);
+      color: #000;
+    }
+
+    .block-meta {
+      font-size: 13px;
+      color: var(--tg-hint);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    /* ==================== Modal ==================== */
+    .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0,0,0,0.7);
-      display: none;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all var(--transition-base);
     }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
     .modal-content {
-      background: var(--card-bg);
-      padding: 16px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
+      background: var(--tg-secondary-bg);
+      border-radius: var(--radius-xl);
+      padding: var(--spacing-xl);
+      max-width: 90%;
+      width: 400px;
+      transform: scale(0.9);
+      transition: transform var(--transition-base);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .close-btn {
-      margin-top: 12px;
-      background: var(--badge-reward);
-      color: #fff;
-      border: none;
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: var(--spacing-md);
+      color: var(--tg-text);
+    }
+
+    .modal-body {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .hash-display {
+      background: rgba(0, 0, 0, 0.4);
+      padding: var(--spacing-md);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      word-break: break-all;
+      color: var(--accent-success);
+      border: 1px solid rgba(124, 255, 192, 0.2);
+    }
+
+    /* ==================== Loading Spinner ==================== */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==================== Animations ==================== */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn var(--transition-base) ease-out;
+    }
+
+    /* ==================== Responsive ==================== */
+    @media (max-width: 480px) {
+      .container {
+        padding: var(--spacing-sm);
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+      }
+
+      .card {
+        padding: var(--spacing-md);
+      }
+
+      .logo-text {
+        font-size: 20px;
+      }
+    }
+
+    /* ==================== Dark Mode Enhancements ==================== */
+    @media (prefers-color-scheme: dark) {
+      body {
+        color-scheme: dark;
+      }
+    }
+
+    /* ==================== Safe Area ==================== */
+    @supports (padding: max(0px)) {
+      body {
+        padding-left: max(0px, env(safe-area-inset-left));
+        padding-right: max(0px, env(safe-area-inset-right));
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Memhash</h1>
-    <div class="card">
-      <div class="profile-grid">
-        <div>
-          <div class="label">Баланс</div>
-          <div class="value">348.002</div>
+  <div class="app">
+    <!-- Header -->
+    <div class="container">
+      <header class="header">
+        <div class="header-content">
+          <div class="logo">
+            <div class="logo-icon">⚡</div>
+            <h1 class="logo-text">Memhash</h1>
+          </div>
+          <div class="user-info">
+            <img id="userAvatar" class="user-avatar" alt="User" />
+            <span id="userName" style="font-weight: 600; font-size: 14px;"></span>
+          </div>
         </div>
-        <div>
-          <div class="label">Энергия</div>
-          <div class="energy-bar"><div class="energy-fill" id="energyFill"></div></div>
+      </header>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container">
+      <!-- Balance Card -->
+      <div class="card fade-in">
+        <div class="card-header">
+          <h2 class="card-title">Ваш баланс</h2>
         </div>
-        <div>
-          <div class="label">Блок</div>
-          <div class="value">1056</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">Баланс</div>
+            <div class="stat-value">
+              <span id="balance">348.002</span>
+              <span class="stat-unit">MH</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Блок</div>
+            <div class="stat-value">
+              <span id="blockNumber">1056</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <div class="label">Сложность</div>
-          <div class="value">0.0004</div>
-        </div>
-        <div>
-          <div class="label">Награда</div>
-          <div class="value">0.0123</div>
-        </div>
-        <div>
-          <div class="label">Онлайн</div>
-          <div class="value">120</div>
+        <div class="energy-container">
+          <div class="energy-header">
+            <div class="stat-label">Энергия</div>
+            <div class="stat-value" style="font-size: 14px;">
+              <span id="energyPercent">65</span>
+              <span class="stat-unit">%</span>
+            </div>
+          </div>
+          <div class="energy-bar">
+            <div class="energy-fill" id="energyFill" style="width: 65%;"></div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="card">
-      <span class="status-badge">Майнинг</span>
-      <div class="profile-grid">
-        <div>
-          <div class="label">Shares</div>
-          <div class="value">12</div>
+
+      <!-- Network Stats -->
+      <div class="card fade-in" style="animation-delay: 100ms;">
+        <div class="card-header">
+          <h2 class="card-title">Статистика сети</h2>
         </div>
-        <div>
-          <div class="label">Хэши</div>
-          <div class="value">1520</div>
-        </div>
-        <div>
-          <div class="label">Доход</div>
-          <div class="value">0.0012</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">Сложность</div>
+            <div class="stat-value">
+              <span id="difficulty">0.0004</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Награда</div>
+            <div class="stat-value">
+              <span id="reward">0.0123</span>
+              <span class="stat-unit">MH</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Онлайн</div>
+            <div class="stat-value">
+              <span id="online">120</span>
+            </div>
+          </div>
         </div>
       </div>
-      <button class="stop-btn" id="toggleBtn">Остановить</button>
-    </div>
-    <h2>Недавние блоки</h2>
-    <ul class="recent-blocks" id="blockList">
-      <!-- items added by JS -->
-    </ul>
+
+      <!-- Mining Card -->
+      <div class="card fade-in" style="animation-delay: 200ms;">
+        <div class="card-header">
+          <h2 class="card-title">Майнинг</h2>
+          <span class="card-badge">
+            <span class="badge-dot"></span>
+            <span id="miningStatus">Активен</span>
+          </span>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">Shares</div>
+            <div class="stat-value">
+              <span id="shares">12</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Хэши</div>
+            <div class="stat-value">
+              <span id="hashes">1520</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Доход</div>
+            <div class="stat-value">
+              <span id="income">0.0012</span>
+              <span class="stat-unit">MH</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-danger btn-large" id="toggleBtn" style="margin-top: var(--spacing-lg);">
+          <span>Остановить майнинг</span>
+        </button>
+      </div>
+
+      <!-- Recent Blocks -->
+      <div class="section-header">
+        <h2 class="section-title">Недавние блоки</h2>
+        <a href="#" class="section-action">Все блоки →</a>
+      </div>
+      <ul class="block-list" id="blockList">
+        <!-- Blocks will be added here by JavaScript -->
+      </ul>
+    </main>
   </div>
-  <div class="modal" id="blockModal">
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="blockModal">
     <div class="modal-content">
-      <h2>Детали блока</h2>
-      <pre id="blockHash" style="white-space:pre-wrap;overflow-x:auto;background:#111;padding:8px;font-family:'Source Code Pro',monospace;color:#fff;"></pre>
-      <button class="close-btn" id="closeModal">Понятно</button>
+      <div class="modal-header">Детали блока</div>
+      <div class="modal-body">
+        <div class="hash-display" id="blockHash"></div>
+      </div>
+      <button class="btn btn-primary" id="closeModal">Понятно</button>
     </div>
   </div>
+
   <script>
+    // ==================== Telegram WebApp Initialization ====================
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+    tg.enableClosingConfirmation();
+
+    // Применяем тему Telegram
+    document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#0E0E0E');
+    document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#1A1A1A');
+    document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#FFFFFF');
+    document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#5B8CFF');
+
+    // Пользовательские данные
+    const user = tg.initDataUnsafe?.user;
+    if (user) {
+      document.getElementById('userName').textContent = user.first_name || 'User';
+      document.getElementById('userAvatar').src = user.photo_url || `https://ui-avatars.com/api/?name=${user.first_name}&background=5B8CFF&color=fff&size=128`;
+    }
+
+    // ==================== State Management ====================
+    let miningActive = true;
+    let energy = 65;
+
+    // ==================== UI Updates ====================
+    function updateEnergy() {
+      if (miningActive && energy > 0) {
+        energy = Math.max(0, energy - 0.1);
+      } else if (!miningActive && energy < 100) {
+        energy = Math.min(100, energy + 0.5);
+      }
+
+      document.getElementById('energyPercent').textContent = Math.round(energy);
+      document.getElementById('energyFill').style.width = `${energy}%`;
+    }
+
+    // Обновление энергии каждую секунду
+    setInterval(updateEnergy, 1000);
+
+    // ==================== Mining Toggle ====================
     const toggleBtn = document.getElementById('toggleBtn');
     toggleBtn.addEventListener('click', () => {
-      toggleBtn.disabled = true;
-      toggleBtn.style.opacity = '0.7';
+      miningActive = !miningActive;
+
+      // Haptic feedback
+      tg.HapticFeedback.impactOccurred('medium');
+
+      if (miningActive) {
+        toggleBtn.innerHTML = '<span>Остановить майнинг</span>';
+        toggleBtn.className = 'btn btn-danger btn-large';
+        document.getElementById('miningStatus').textContent = 'Активен';
+      } else {
+        toggleBtn.innerHTML = '<span>Начать майнинг</span>';
+        toggleBtn.className = 'btn btn-primary btn-large';
+        document.getElementById('miningStatus').textContent = 'Остановлен';
+      }
+
+      // Анимация кнопки
+      toggleBtn.style.transform = 'scale(0.96)';
       setTimeout(() => {
-        toggleBtn.disabled = false;
-        toggleBtn.style.opacity = '1';
-      }, 300);
+        toggleBtn.style.transform = 'scale(1)';
+      }, 150);
     });
 
-    // mock recent blocks
+    // ==================== Recent Blocks ====================
     const blocks = [
-      {id: 1055, reward: 0.0023, hash: '000000acbd'},
-      {id: 1054, reward: 0, hash: '000000ef12'},
-      {id: 1053, reward: 0.0011, hash: '00000098ab'}
+      { id: 1055, reward: 0.0023, hash: '0000000acbd12345678901234567890123456789012345678901234567890', timestamp: '2 мин. назад', miner: 'CryptoKing' },
+      { id: 1054, reward: 0, hash: '000000ef1234567890123456789012345678901234567890123456789012', timestamp: '5 мин. назад', miner: 'MinerPro' },
+      { id: 1053, reward: 0.0011, hash: '00000098ab34567890123456789012345678901234567890123456789012', timestamp: '8 мин. назад', miner: 'HashMaster' }
     ];
-    const list = document.getElementById('blockList');
-    blocks.forEach(b => {
+
+    const blockList = document.getElementById('blockList');
+    blocks.forEach((block, index) => {
       const li = document.createElement('li');
-      const header = document.createElement('div');
-      header.className = 'block-header';
-      const num = document.createElement('span');
-      num.textContent = `Блок #${b.id}`;
-      header.appendChild(num);
-      const tag = document.createElement('span');
-      tag.className = 'reward-tag';
-      tag.style.background = b.reward > 0 ? 'var(--badge-reward)' : 'var(--badge-reward-zero)';
-      tag.textContent = `Моя награда → ${b.reward}`;
-      header.appendChild(tag);
-      li.appendChild(header);
-      const created = document.createElement('div');
-      created.style.fontSize = '12px';
-      created.textContent = 'Создано в ... Ник';
-      li.appendChild(created);
-      li.addEventListener('click', () => showModal(b.hash));
-      list.appendChild(li);
+      li.className = 'block-item fade-in';
+      li.style.animationDelay = `${300 + index * 100}ms`;
+
+      const rewardClass = block.reward > 0 ? 'reward-positive' : 'reward-zero';
+      const rewardIcon = block.reward > 0 ? '✓' : '○';
+
+      li.innerHTML = `
+        <div class="block-header">
+          <span class="block-number">Блок #${block.id}</span>
+          <span class="reward-badge ${rewardClass}">
+            ${rewardIcon} ${block.reward} MH
+          </span>
+        </div>
+        <div class="block-meta">
+          <span>${block.timestamp}</span>
+          <span>•</span>
+          <span>${block.miner}</span>
+        </div>
+      `;
+
+      li.addEventListener('click', () => {
+        tg.HapticFeedback.impactOccurred('light');
+        showModal(block.hash);
+      });
+
+      blockList.appendChild(li);
     });
 
+    // ==================== Modal ====================
     const modal = document.getElementById('blockModal');
     const blockHash = document.getElementById('blockHash');
     const closeBtn = document.getElementById('closeModal');
+
     function showModal(hash) {
       blockHash.textContent = hash;
-      modal.style.display = 'flex';
+      modal.classList.add('active');
+      tg.HapticFeedback.impactOccurred('soft');
     }
-    closeBtn.addEventListener('click', () => {
-      modal.style.display = 'none';
+
+    function hideModal() {
+      modal.classList.remove('active');
+    }
+
+    closeBtn.addEventListener('click', hideModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) hideModal();
     });
+
+    // ==================== Real-time Updates ====================
+    function updateStats() {
+      // Симуляция обновления статистики
+      const balance = document.getElementById('balance');
+      const currentBalance = parseFloat(balance.textContent);
+      if (miningActive) {
+        balance.textContent = (currentBalance + 0.0001).toFixed(4);
+      }
+
+      const hashes = document.getElementById('hashes');
+      if (miningActive) {
+        hashes.textContent = parseInt(hashes.textContent) + Math.floor(Math.random() * 10);
+      }
+    }
+
+    // Обновление каждые 2 секунды
+    setInterval(updateStats, 2000);
+
+    // ==================== Performance Optimizations ====================
+    // Используем requestAnimationFrame для плавных анимаций
+    let lastTime = 0;
+    function animate(time) {
+      if (time - lastTime > 16) { // ~60 FPS
+        lastTime = time;
+      }
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    // ==================== Service Worker Registration ====================
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+          console.log('Service Worker registration failed');
+        });
+      });
+    }
   </script>
 </body>
 </html>
